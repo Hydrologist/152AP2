@@ -21,6 +21,7 @@ class server_queue:
 		self.sum_time_length = 0
 		self.start_idle_time = 0
 		self.buffer_size = buffer_size#new
+		self.drop_count = 0#number dropped
 		self.arrival_rate = arrival_rate
 		self.Packet_Delay = Packet_Delay
 		self.Server_Idle_Periods = Server_Idle_Periods
@@ -51,6 +52,8 @@ class server_queue:
 			arrival_time = env.now  
 			#print(self.num_pkt_total, "packet arrival")
 			new_packet = Packet(self.packet_number,arrival_time)
+			if(self.queue_len >= buffer_size)#buffer_size exceeded--
+				continue
 			if self.flag_processing == 0:
 				self.flag_processing = 1
 				idle_period = env.now - self.start_idle_time
@@ -119,7 +122,7 @@ def main():
 		router = server_queue(env, arrival_rate, Packet_Delay, Server_Idle_Periods,10) 
 		env.process(router.packets_arrival(env))
 		env.run(until=SIM_TIME)
-		print ("{0:<10.3f} {1:<10} {2:<10.3f} {3:<10.3f} {4:<10.3f} {5:<10.3f} {6:<10.3f} {7:<10.3f}".format(
+		print ("{0:<0.3f} {1:<9} {2:<9.3f} {3:<9.3f} {4:<9.3f} {5:<9.3f} {6:<9.3f} {7:<9.3f}".format(
 			round(arrival_rate, 3),
 			int(Packet_Delay.count()),
 			round(Packet_Delay.minimum(), 3),
@@ -132,16 +135,17 @@ def main():
 
 
 	print("Simple queue system model:mu = {0}".format(MU))
-	print ("{0:<10} {1:<10} {2:<10} {3:<10} {4:<10} {5:<10} {6:<10} {7:<10} {8:<10}".format(
+	print ("{0:<9} {1:<9} {2:<9} {3:<9} {4:<9} {5:<9} {6:<9} {7:<9} {8:<9}".format(
         "Lambda", "Count", "Min", "Max", "Mean", "Median", "Sd", "Utilization", "PdBuffer10"))
+	random.seed(RANDOM_SEED)
 	for arrival_rate in [0.2, 0.4, 0.6, 0.8, 0.9, 0.99]:
 		env = simpy.Environment()
 		Packet_Delay = StatObject()
 		Server_Idle_Periods = StatObject()
-		router = server_queue(env, arrival_rate, Packet_Delay, Server_Idle_Periods,50) 
+		router = server_queue(env, arrival_rate, Packet_Delay, Server_Idle_Periods,10) 
 		env.process(router.packets_arrival(env))
 		env.run(until=SIM_TIME)
-		print ("{0:<10.3f} {1:<10} {2:<10.3f} {3:<10.3f} {4:<10.3f} {5:<10.3f} {6:<10.3f} {7:<10.3f}".format(
+		print ("{0:<0.3f} {1:<9} {2:<9.3f} {3:<9.3f} {4:<9.3f} {5:<9.3f} {6:<9.3f} {7:<9.3f}".format(
 			round(arrival_rate, 3),
 			int(Packet_Delay.count()),
 			round(Packet_Delay.minimum(), 3),
@@ -151,6 +155,5 @@ def main():
 			round(Packet_Delay.standarddeviation(), 3),
 			round(1-Server_Idle_Periods.sum()/SIM_TIME, 3)))
 		#Calculate prob drop at buffer 10
-		#Calculate prob drop at buffer 50
 	
 if __name__ == '__main__': main()
