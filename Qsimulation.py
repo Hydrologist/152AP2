@@ -6,7 +6,7 @@ import math
 
 RANDOM_SEED = 31
 SIM_TIME = 10000
-MU = .5
+MU = 1
 
 
 
@@ -108,10 +108,10 @@ class StatObject:
 
 def main():
 	print("Simple queue system model:mu = {0}".format(MU))
-	print ("{0:<9} {1:<9} {2:<9} {3:<9} {4:<9} {5:<9} {6:<9} {7:<9}".format(
-        "Lambda", "Count", "Min", "Max", "Mean", "Median", "Sd", "Utilization"))
+	print ("{0:<9} {1:<9} {2:<9} {3:<9} {4:<9} {5:<9} {6:<9} {7:<9} {8:<9}".format(
+        "Lambda", "Count", "Min", "Max", "Mean", "Median", "Sd", "Utilization", "Prob Delay"))
 	random.seed(RANDOM_SEED)
-	for arrival_rate in [0.3, 0.4]:
+	for arrival_rate in [0.2, 0.4, 0.6, 0.8, 0.9, 0.99]:
 		env = simpy.Environment()
 		Packet_Delay = StatObject()
 		Server_Idle_Periods = StatObject()
