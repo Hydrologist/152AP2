@@ -5,7 +5,7 @@ import simpy
 import math
 
 RANDOM_SEED = 31
-SIM_TIME = 10000
+SIM_TIME = 1000000
 MU = 1
 
 
@@ -134,7 +134,7 @@ def main():
 			round(((1-arrival_rate/MU)/(1-(arrival_rate/MU)**(router.buffer_size + 2)))*((arrival_rate/MU)**router.buffer_size), 3)))
 
 	print("Simple queue system model:mu = {0}, B = 50".format(MU))
-	print ("{0:<4} {1:<9} {2:<10} {3:<10} {4:<10} {5:<10} {6:<10} {7:<10} {8:<8} {9:<10}".format(
+	print ("{0:<4} {1:<9} {2:<10} {3:<10} {4:<10} {5:<10} {6:<10} {7:<10} {8:<10} {9:<10}".format(
         "Lambda", "Count", "Min", "Max", "Mean", "Median", "Sd", "Utilization", "Pd", "Calculated Pd"))
 	random.seed(RANDOM_SEED)
 	for arrival_rate in [0.2, 0.4, 0.6, 0.8, 0.9, 0.99]:
