@@ -3,7 +3,7 @@ import simpy
 import math
 
 RANDOM_SEED = 31
-SIM_TIME = 10
+SIM_TIME = 1000000
 MU = 1
 class host:
     def __init__(self, env, ethernet, arrival_rate, slot_length, my_id):
@@ -91,24 +91,18 @@ class ethernet:
             print("=====================")
             print("Time ", self.env.now)
             print("Slot number", self.slot_number)
-            request = 0
-            #see if there is collision, number of request for this slot
-            host_index = -1
+            request = 0 #how many request at current slot?
+            host_index = -1 #index of the first request
             for x in range(self.num_hosts):
                 if(self.hosts[x].queue_len == 0):
-                    continue
-                #if the host's slot is smaller than ethernet's current slot
-                # and it has queue then it can transfer in this slot
-                if((self.hosts[x].transmit_slot < self.slot_number)):
+                    continue#don't even care if hosts have no queue, packets
+                
+                #hosts queue have packets,
+                # update their slot if they are behind current slot
+                if((self.hosts[x].transmit_slot <= self.slot_number)):
                     request += 1
-                    host_index = x
                     self.hosts[x].transmit_slot = self.slot_number
-                elif(self.hosts[x].transmit_slot == self.slot_number ):
-                    request += 1 
                     host_index = x
-                    if request > 1:
-                        self.hosts[x].delay_transmission()
-
 
                 print("Host ", x, " can possibly transmit at slot ", self.hosts[x].transmit_slot, "Queue is ", self.hosts[x].queue_len)
                 #count only hosts that have stuff to transmit
@@ -119,19 +113,15 @@ class ethernet:
                 self.success_slots += 1
                 print(">>Can TRANSMIT<< since request = 1")
                 self.env.process(self.hosts[host_index].process_packet(self.env, self.server))
-                '''for x in range(self.num_hosts):
-                    if(self.hosts[x].queue_len > 0) & (self.hosts[x].transmit_slot == self.slot_number):
-                        self.env.process(self.hosts[x].process_packet(self.env, self.server))
-                        break'''
-            #detected collision
-            '''elif request > 1:
-                print("Call delay packets")
+            
+            #more than 1 request? then go through and delay each hosts that requested
+            elif request > 1:
                 for x in range(self.num_hosts):
-                    if (self.hosts[x].transmit_slot == self.slot_number) & (self.hosts[x].queue_len >= 1):
-                        self.hosts[x].delay_transmission()'''
+                    if(self.hosts[x].transmit_slot == self.slot_number) and (self.hosts[x].queue_len > 0):
+                        self.hosts[x].delay_transmission()          
 
-            #update link's slot number
             self.slot_number += 1
+
     def get_throughput(self):
         print("At arrival rate: ", self.arrival_rate);
         print(self.success_slots, " success slots")
