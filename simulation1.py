@@ -110,6 +110,7 @@ class StatObject:
 
 
 def main():
+	print("Make sure the WIDTH of the console is big enough to display table in one line.")
 	print("Simple queue system model:mu = {0} B = 10".format(MU))
 	print ("{0:<4} {1:<9} {2:<10} {3:<10} {4:<10} {5:<10} {6:<10} {7:<10} {8:<8} {9:<10}".format(
         "Lambda", "Count", "Min", "Max", "Mean", "Median", "Sd", "Utilization", "Pd", "Calculated Pd"))
