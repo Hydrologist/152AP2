@@ -22,17 +22,15 @@ class host:
 
     def process_packet(self, env, ethernet):
         #print("Call process packet on Host ", self.id)
-        process_time = random.expovariate(MU)
         #print("Process takes ", process_time)
         self.queue_len -= 1
-        yield env.timeout(process_time)
+        #yield env.timeout(process_time)
         #print("After call process packet, Host ", self.id, " quelength is ", self.queue_len)
         #finish processing set attmpt to 0
         self.attempts = 0
         self.success_packets += 1
         self.transmit_slot += 1
   
-
     def packets_arrival(self, env):
         # packet arrivals
         #print('Initiating packet arrival.')
@@ -48,11 +46,11 @@ class host:
 
     #if collision this reset host's next transmit slot
     def delay_transmission_exp(self):
-        self.transmit_slot = self.transmit_slot + random.randint(0, 2**min(self.attempts, 10)) + 1
+        self.transmit_slot = self.transmit_slot + random.randint(0, 2**min(self.attempts, 10))
         self.attempts += 1
         #print("Host ", self.id, " delayed packet to slot ", self.transmit_slot, " with attempts ", self.attempts)
     def delay_transmission_lin(self):
-        self.transmit_slot = self.transmit_slot + random.randint(0, min(self.attempts, 1024))  + 1
+        self.transmit_slot = self.transmit_slot + random.randint(0, min(self.attempts, 1024)) + 1
         self.attempts += 1
         #print("Host ",self.id," is delayed to ", self.transmit_slot, "with attempts", self.attempts)
 class ethernet:
@@ -63,6 +61,8 @@ class ethernet:
         self.num_hosts = num_hosts
         self.slot_number = 0
         self.success_slots = 0
+        self.collision_slots = 0
+        self.empty_slots = 0
         self.hosts = []
         self.arrival_rate = arrival_rate
         for x in range(num_hosts):
@@ -100,13 +100,16 @@ class ethernet:
             if request == 1:
                 self.success_slots += 1
                 #print(">>Can TRANSMIT<< since request = 1")
-                self.env.process(self.hosts[host_index].process_packet(self.env, self.server))
+                self.hosts[host_index].process_packet(self.env, self.server)
             
             #more than 1 request? then go through and delay each hosts that requested
             elif request > 1:
+                self.collision_slots += 1
                 for x in range(self.num_hosts):
                     if(self.hosts[x].transmit_slot == self.slot_number) and (self.hosts[x].queue_len > 0):
-                        self.hosts[x].delay_transmission_exp()          
+                        self.hosts[x].delay_transmission_exp()
+            elif request == 0:
+                self.empty_slots += 1          
 
             self.slot_number += 1
 
@@ -142,18 +145,24 @@ class ethernet:
             if request == 1:
                 self.success_slots += 1
                 #print(">>Can TRANSMIT<< since request = 1")
-                self.env.process(self.hosts[host_index].process_packet(self.env, self.server))
+                self.hosts[host_index].process_packet(self.env, self.server)
             
             #more than 1 request? then go through and delay each hosts that requested
             elif request > 1:
+                self.collision_slots += 1
                 for x in range(self.num_hosts):
                     if(self.hosts[x].transmit_slot == self.slot_number) and (self.hosts[x].queue_len > 0):
-                        self.hosts[x].delay_transmission_lin()          
+                        self.hosts[x].delay_transmission_lin()
+
+            elif request == 0:
+                self.empty_slots += 1          
 
             self.slot_number += 1
 
     def get_throughput(self):
-        print("lambda: ", self.arrival_rate, " throughput: ", self.success_slots/self.slot_number)    
+        print("lambda: ", self.arrival_rate, " throughput: ", self.success_slots/self.slot_number)
+        print("<success:", self.success_slots, " > <collision: ", self.collision_slots, " > <empty: ", self.empty_slots,
+                "> <total", self.slot_number, " >")    
                 
 
 def main():
@@ -181,5 +190,4 @@ def main():
         env.process(myethernet.ethernet_control_linear_delay())
         env.run(until=SIM_TIME)
         myethernet.get_throughput()
-
 if __name__ == '__main__': main()
